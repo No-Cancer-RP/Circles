@@ -12,6 +12,11 @@ do
 	CIRCLE_BLURRED = 2
 end
 
+do
+	CIRCLES_UP = 0
+	CIRCLES_DOWN = 1
+end
+
 local err = "bad argument #%i to '%s' (%s expected, got %s)"
 local function TypeCheck(cond, arg, name, expected, got)
 	if (not cond) then
@@ -415,6 +420,10 @@ do
 	AccessorFunc("BlurDensity", 2)								-- The circle's blur density if Type is set to CIRCLE_BLURRED.
 	AccessorFunc("OutlineWidth", 10, "m_Dirty")					-- The circle's outline width if Type is set to CIRCLE_OUTLINED.
 
+	-- Only used for NEW circle
+	AccessorFunc("Offset", 0)									-- The circle's starting angle, in degrees.
+	AccessorFunc("Arc", 360)									-- The circle's maximum arc, in degrees.
+
 	function CIRCLE:SetPos(x, y)
 		self:SetX(x)
 		self:SetY(y)
@@ -431,6 +440,24 @@ do
 
 	function CIRCLE:GetAngles()
 		return self:GetStartAngle(), self:GetEndAngle()
+	end
+
+	function CIRCLE:Setup(offset, size)
+		self:SetOffset(offset)
+		self:SetArc(size)
+		self:SetAngles(offset - 90, offset + size - 90)
+	end
+
+	function CIRCLE:Lerp(t, speed, direction)
+		TypeCheck(isnumber(t), 1, "Lerp", "number", t)
+		TypeCheck(isnumber(speed), 2, "Lerp", "number", speed)
+		TypeCheck(isnumber(direction), 3, "Lerp", "number", direction)
+
+		if direction == CIRCLES_DOWN then
+			self:SetStartAngle(Lerp(FrameTime() * speed, self:GetStartAngle(), self:GetOffset() - 90 + self:GetArc() - self:GetArc() * t))
+		elseif direction == CIRCLES_UP then
+			self:SetEndAngle(Lerp(FrameTime() * speed, self:GetEndAngle(), self:GetOffset() - 90 + self:GetArc() * t))
+		end
 	end
 end
 
